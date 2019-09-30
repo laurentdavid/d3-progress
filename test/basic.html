@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <link type="text/css" rel="stylesheet" href="../dist/d3-progress.css">
+    <script src="//d3js.org/d3.v5.min.js"></script>
+    <script src="../dist/d3-progress.js"></script>
+</head>
+<body>
+<svg></svg>
+<button>Update</button>
+<script>
+
+
+
+  var chart = d3.progress()
+    .width(960)
+    .height(100);
+
+  d3.json('data.json').then(function(data) {
+    chart.data(data);
+    var svg = d3.select('body').select('svg');
+    svg.call(chart);
+
+    d3.selectAll('button').on('click', function () {
+      svg.selectAll('g.progress').datum(randomize);
+      svg.call(chart);
+    });
+  });
+
+  function randomize (d) {
+    if (!d.randomizer)
+      d.randomizer = randomizer(d);
+    d.results = d.results.map(d.randomizer);
+    d.markers = d.markers.map(d.randomizer);
+    return d;
+  }
+
+  function randomizer (d) {
+    var k = d3.max(d.results.map(function(r) {return r.value})) * .2;
+    return function (res) {
+      res.value = Math.max(0, res.value + k * (Math.random() - .5));
+      return res;
+    };
+  }
+
+</script>
+</body>
+</html>

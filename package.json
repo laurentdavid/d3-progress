@@ -1,0 +1,45 @@
+{
+  "name": "d3-progress",
+  "version": "1.0.0",
+  "description": "d3 horizontal progress chart comparing multiple values over the same scale",
+  "keywords": [
+    "d3",
+    "d3-module",
+    "progress",
+    "Compet Vet Suivi"
+  ],
+  "homepage": "https://github.com/call-learning/d3-progress.git",
+  "author": {
+    "name": "Laurent David"
+  },
+  "license": "BSD-3-Clause",
+  "main": "build/d3-progress.js",
+  "module": "src/index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/call-learning/d3-progress.git"
+  },
+  "scripts": {
+    "test": "tape -r esm 'test/**/*-test.js' && eslint src test",
+    "prepublishOnly": "yarn test && rm -rf dist && rollup -c",
+    "postpublish": "git push && git push --tags && zip -j dist/${npm_package_name}.zip -- LICENSE README.md dist/${npm_package_name}.js dist/${npm_package_name}.min.js"
+  },
+  "dependencies": {
+    "d3-axis": "1",
+    "d3-scale": "3",
+    "d3-selection": "1",
+    "d3-timer": "1",
+    "d3-transition": "1",
+    "d3-scale-chromatic": "1",
+    "d3-format": "1"
+  },
+  "devDependencies": {
+    "@observablehq/tape": "^0.0.1",
+    "eslint": "6",
+    "esm": "3",
+    "rollup": "1",
+    "rollup-plugin-node-resolve": "5",
+    "rollup-plugin-terser": "5",
+    "rollup-plugin-css-porter": "1"
+  }
+}

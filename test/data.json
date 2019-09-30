@@ -1,0 +1,29 @@
+{
+  "results": [
+    {
+      "label": "Connaissances",
+      "value": 0.5
+    },
+    {
+      "label": "Capacité",
+      "value": 0.8
+    }
+  ],
+  "markers": [
+    {
+      "label": "1",
+      "value": 0.1,
+      "active": false
+    },
+    {
+      "label": "2",
+      "value": 0.25,
+      "active": false
+    },
+    {
+      "label": "4",
+      "value": 0.5,
+      "active": true
+    }
+  ]
+}
