@@ -1,9 +1,10 @@
-var tape = require("tape");
-var d3 = require("../build/d3-bullet-cvs");
+var tape = require('tape');
+var d3 = require('../dist/d3-progress');
 
-require("./pathEqual");
+require('./pathEqual');
 
-tape("d3.bulletcvs() has the expected defaults", function (test) {
-  var b = d3.bulletcvs();
+tape('d3.progress() has the expected defaults', function (test) {
+  var b = d3.progress();
+  test.ok(b != null);
   test.end();
 });

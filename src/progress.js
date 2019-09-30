@@ -2,7 +2,6 @@ import { axisBottom as d3AxisBottom } from 'd3-axis';
 import { scaleLinear as d3ScaleLinear } from 'd3-scale';
 import { format as d3Format } from 'd3-format';
 import 'd3-transition';
-import { schemeSet1 as d3SchemeSet1 } from 'd3-scale-chromatic';
 
 /**
  * Make a data structure to hold a progress bar with markers
