@@ -1,6 +1,5 @@
 import { axisBottom as d3AxisBottom } from 'd3-axis';
 import { scaleLinear as d3ScaleLinear } from 'd3-scale';
-import { format as d3Format } from 'd3-format';
 import 'd3-transition';
 
 /**
@@ -11,13 +10,14 @@ export default function () {
   let data = {};
   let width = 960;
   let height = 100;
-  let graphMargins = { top: 10, right: 5, bottom: 20, left: 15 }; // Absolute margins
+  let graphMargins = { top: 10, right: 5, bottom: 30, left: 15 }; // Absolute margins
   let graphWidth = function () { return width - graphMargins.left - graphMargins.right; };
   let graphHeight = function () { return height - graphMargins.top - graphMargins.bottom; };
   let marginW = 0.1;
   let marginH = 0.1;
 
   let ticksValues = [0, 0.25, 0.50, 0.75, 1];
+
   // For each small multiple…
   function progressCVS (svgitem) {
 
@@ -44,37 +44,58 @@ export default function () {
 
     // Draw xscale (tick 0.25)
 
-
-    let displayedValues = new Set(ticksValues);
-    data.markers.forEach(function(d) {
-      displayedValues.add(d.value);
+    let markervalues = data.markers.map(function (d) {
+      return d.value;
     });
-    const axis = wrap.append('g').attr('class', 'axis');
-    axis.attr('transform', `translate(0,${extentY})`).call(
+
+    const tickFormat = function (val) {return Math.round(val * 100);};
+    const tickSize = graphMargins.bottom/3;
+
+    // Add both axes
+    const axismarker = wrap.append('g').attr('class', 'axismarker');
+    axismarker.attr('transform', `translate(0,${extentY})`).call(
       d3AxisBottom(scaleX)
-        .tickValues(Array.from(displayedValues).sort())
-        .tickFormat(d3Format('.0%'))
+        .tickValues(markervalues.sort())
+        .tickFormat(tickFormat)
+        .tickSize(tickSize)
     );
-    axis.attr('font-size', graphMargins*0.8); // 80% of the margin
+
+    const axisgraph = wrap.append('g').attr('class', 'axisgraph');
+    axisgraph.attr('transform', `translate(0,${extentY})`).call(
+      d3AxisBottom(scaleX)
+        .tickValues(ticksValues)
+        .tickFormat(tickFormat)
+        .tickSize(tickSize)
+    );
+    // Fixup style
+    axisgraph.select('.domain').remove();
+    axismarker.select('.domain').remove();
+    axisgraph.attr('font-size', tickSize); // 80% of the margin
+    axismarker.attr('font-size', tickSize); // 80% of the margin
+
     // Draw grey background
     graphWrap.append('rect')
       .attr('class', 'background-bar')
       .attr('width', extentX)
       .attr('height', extentY)
+      .attr('rx', extentY * marginH)
+      .attr('ry', extentY * marginH)
       .attr('x', 0)
       .attr('y', 0);
 
     // Draw results
-    let barHeight = function (index) { return extentY * (1 - marginH * index * 4); };
+    let barHeight = function (index) { return extentY * (1 - marginH * (index + 1) * 4); };
     let barMiddlePosition = function (index) { return extentY / 2 - barHeight(index) / 2; };
 
     graphWrap.selectAll('rect.results')
       .data(data.results)
       .enter()
       .append('rect')
-      .attr('class', function (_d, index) { return 'results bar-' + index;})
+      .attr('class', function (d) { return 'results competency-type-bar-' + ((d.type)?d.type:1);})
       .attr('width', function (r) { return scaleX(r.value);})
       .attr('height', function (_d, index) {return barHeight(index);})
+      .attr('rx', extentY * marginH)
+      .attr('rx', extentY * marginH)
       .attr('x', 0)
       .attr('y', function (_d, index) { return barMiddlePosition(index);});
     // Draw markers
@@ -97,7 +118,8 @@ export default function () {
       .attr('x', function (r) { return scaleX(r.value);})
       .attr('y', extentY / 2)
       .text(function (d) {return d.label;})
-      .attr('font-size',extentY/2);
+      .attr('class', 'marker-text')
+      .attr('font-size', extentY * (1 - marginH) / 3);
   }
 
   progressCVS.width = function (_) {

@@ -1,12 +1,9 @@
 {
   "results": [
     {
-      "label": "Connaissances",
+      "label": "Connaissance",
+      "type": 4,
       "value": 0.5
-    },
-    {
-      "label": "Capacité",
-      "value": 0.8
     }
   ],
   "markers": [

@@ -30,8 +30,7 @@
     "d3-selection": "1",
     "d3-timer": "1",
     "d3-transition": "1",
-    "d3-scale-chromatic": "1",
-    "d3-format": "1"
+    "d3-scale-chromatic": "1"
   },
   "devDependencies": {
     "@observablehq/tape": "^0.0.1",
