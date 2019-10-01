@@ -99,7 +99,7 @@ export default function () {
       .attr('x', 0)
       .attr('y', function (_d, index) { return barMiddlePosition(index);});
     // Draw markers
-    let circleRadius = function (data) { return extentY * (1 - marginH * (data.active ? 2 : 4)) / 2; };
+    let circleRadius = function (data) { return extentY * (1 - marginH * (data.active ? 2 : 4)) / 3; };
 
     let marker = graphWrap.selectAll('g.marker')
       .data(data.markers)
