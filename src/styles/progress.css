@@ -35,17 +35,34 @@
 
 /*Four types of competencies */
 .progress-cvs .competency-type-bar-1 {
+    fill: #faa339;
+}
+
+.progress-cvs .competency-type-bar-bg-1 {
+    fill: #fee3c0;
+}
+
+
+.progress-cvs .competency-type-bar-2 {
     fill: #3991de;
 }
 
-.progress-cvs .competency-type-bar-2 {
-    fill: #c7dff5;
+.progress-cvs .competency-type-bar-bg-2 {
+    fill: #a9c5de;
 }
 
 .progress-cvs .competency-type-bar-3 {
-    fill: #f5f4d5;
+    fill: #39fa43;
+}
+
+.progress-cvs .competency-type-bar-bg-3 {
+    fill: #befac1;
 }
 
 .progress-cvs .competency-type-bar-4 {
-    fill: #f5d1ce;
+    fill: #fa39f0;
+}
+
+.progress-cvs .competency-type-bar-bg-4 {
+    fill: #fabef7;
 }
