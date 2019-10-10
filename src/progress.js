@@ -1,6 +1,6 @@
 import { axisBottom as d3AxisBottom } from 'd3-axis';
 import { scaleLinear as d3ScaleLinear } from 'd3-scale';
-import 'd3-transition';
+import { symbol as d3Symbol, symbolTriangle as d3SymbolTriangle } from 'd3-shape';
 
 /**
  * Make a data structure to hold a progress bar with markers
@@ -17,57 +17,6 @@ export default function () {
   let marginH = 0.1;
 
   let ticksValues = [0, 0.25, 0.50, 0.75, 1];
-
-  function barCVS (currentData, wrapper, maxHeight, scaleX, extentX) {
-    let barHeight = function (index) { return maxHeight * (1 - marginH * (index + 1) * 4); };
-    let barMiddlePosition = function (index) { return maxHeight / 2 - barHeight(index) / 2; };
-
-    wrapper.selectAll('rect.bg')
-      .data(currentData.results)
-      .enter()
-      .append('rect')
-      .attr('class', function (d) { return 'competency-type-bar-bg-' + ((d.type) ? d.type : 1);})
-      .attr('width', extentX)
-      .attr('height', function (_d, index) {return barHeight(index);})
-      .attr('rx', maxHeight * marginH)
-      .attr('ry', maxHeight * marginH)
-      .attr('x', 0)
-      .attr('y', function (_d, index) { return barMiddlePosition(index);});
-
-    wrapper.selectAll('rect.results')
-      .data(currentData.results)
-      .enter()
-      .append('rect')
-      .attr('class', function (d) { return 'results competency-type-bar-' + ((d.type) ? d.type : 1);})
-      .attr('width', function (r) { return scaleX(r.value);})
-      .attr('height', function (_d, index) {return barHeight(index);})
-      .attr('rx', maxHeight * marginH)
-      .attr('rx', maxHeight * marginH)
-      .attr('x', 0)
-      .attr('y', function (_d, index) { return barMiddlePosition(index);});
-    // Draw markers
-    let circleRadius = function (d) { return maxHeight * (1 - marginH * (d.active ? 2 : 4)) / 3; };
-
-    let marker = wrapper.selectAll('g.marker')
-      .data(currentData.markers)
-      .enter()
-      .append('g')
-      .attr('class', function (d) {return d.active ? 'marker active' : 'marker';})
-      .attr('x', function (r) { return scaleX(r.value);})
-      .attr('y', 0);
-
-    marker.append('circle')
-      .attr('r', circleRadius)
-      .attr('cx', function (r) { return scaleX(r.value);})
-      .attr('cy', maxHeight / 2);
-
-    marker.append('text')
-      .attr('x', function (r) { return scaleX(r.value);})
-      .attr('y', maxHeight / 2)
-      .text(function (d) {return d.label;})
-      .attr('class', 'marker-text')
-      .attr('font-size', maxHeight * (1 - marginH) / 3);
-  }
 
   // For each small multiple…
   function progressCVS (svgitem) {
@@ -95,16 +44,6 @@ export default function () {
       .domain([0, 1])
       .range([0, extentX]);
 
-    // Draw xscale (tick 0.25)
-
-    let markervalues =
-      data.map(function (r) {
-        return r.markers.map(function (d) {
-          return d.value;
-        });
-      });
-    markervalues = markervalues.flat();
-
     // Draw grey background
     graphWrap.append('rect')
       .attr('class', 'background-bar')
@@ -119,14 +58,6 @@ export default function () {
     const tickSize = graphMargins.bottom / 3;
 
     // Add the bottom axes
-    const axismarker = wrap.append('g').attr('class', 'axismarker');
-    axismarker.attr('transform', `translate(0,${extentY})`).call(
-      d3AxisBottom(scaleX)
-        .tickValues(markervalues.sort())
-        .tickFormat(tickFormat)
-        .tickSize(tickSize)
-    );
-
     const axisgraph = wrap.append('g').attr('class', 'axisgraph');
     axisgraph.attr('transform', `translate(0,${extentY})`).call(
       d3AxisBottom(scaleX)
@@ -136,9 +67,7 @@ export default function () {
     );
     // Fixup style
     axisgraph.select('.domain').remove();
-    axismarker.select('.domain').remove();
     axisgraph.attr('font-size', tickSize); // 80% of the margin
-    axismarker.attr('font-size', tickSize); // 80% of the margin
 
     // Now the bars
 
@@ -149,12 +78,93 @@ export default function () {
         .attr('height', extentY / data.length)
         .attr('rx', extentY * marginH)
         .attr('ry', extentY * marginH)
+        .attr('class', 'comptype-' + currentData.result.type)
         .attr('transform', `translate(0,${index * (extentY / data.length)})`);
 
-      barCVS(currentData, wrapper, extentY / data.length, scaleX, extentX);
+      progressCVS.barCVS(currentData, wrapper, extentY / data.length, scaleX, extentX);
     });
 
+    let resultsmarkervalues =
+      data.map(function (r) {
+        return r.result.value;
+      });
+
+    var triangleSize = graphWidth() / 50;
+    const resultsmarker = wrap
+      .selectAll('g.resultmarker')
+      .data(resultsmarkervalues)
+      .enter()
+      .append('g')
+      .attr('class', 'resultmarker')
+      .attr('transform', function (r) {return `translate(${scaleX(r)},${extentY})`;});
+
+    var symbolGenerator = d3Symbol().size(triangleSize).type(d3SymbolTriangle);
+
+    resultsmarker
+      .append('path')
+      .attr('d', function () {
+        return symbolGenerator();
+      });
+
+    resultsmarker
+      .append('text')
+      .attr('dy', function(_d,index){ return triangleSize * (1+ index)*0.7;} )
+      .text(function (d) {return `${Math.round(d* 100)} %`;});
+
   }
+
+  progressCVS.barCVS = function (currentData, wrapper, maxHeight, scaleX, extentX) {
+    progressCVS.createBar(
+      wrapper,
+      'bar-bg',
+      maxHeight,
+      function () {return extentX;}
+    );
+
+    progressCVS.createBar(
+      wrapper,
+      'bar',
+      maxHeight,
+      function () {return scaleX(currentData.result.value);}
+    );
+
+    // Draw markers
+    let circleRadius = progressCVS.barHeight(maxHeight)/2;
+
+    let marker = wrapper.selectAll('g.marker')
+      .data(currentData.markers)
+      .enter()
+      .append('g')
+      .attr('class', function (d) {return d.active ? 'marker active' : 'marker';})
+      .attr('x', function (r) { return scaleX(r.value);})
+      .attr('y', maxHeight/2);
+
+    marker.append('circle')
+      .attr('r', circleRadius)
+      .attr('cx', function (r) { return scaleX(r.value);})
+      .attr('cy', maxHeight/2);
+
+    marker.append('text')
+      .attr('x', function (r) { return scaleX(r.value);})
+      .attr('y', maxHeight/2)
+      .text(function (d) {return d.label;})
+      .attr('class', 'marker-text')
+      .attr('font-size', maxHeight/2);
+  };
+
+  progressCVS.createBar = function (item, classname, maxHeight, widthCallBack) {
+    item.append('rect')
+      .attr('class', classname)
+      .attr('width', widthCallBack)
+      .attr('height', function () {return progressCVS.barHeight(maxHeight);})
+      .attr('rx', maxHeight * marginH)
+      .attr('ry', maxHeight * marginH)
+      .attr('x', 0)
+      .attr('y', function () { return progressCVS.barMiddlePosition(maxHeight);});
+  };
+
+  progressCVS.barHeight = function (maxHeight) { return maxHeight * (1 - marginH  * 2); };
+  progressCVS.barMiddlePosition = function (maxHeight) { return maxHeight / 2 - progressCVS.barHeight(maxHeight) / 2; };
 
   progressCVS.width = function (_) {
     if (!arguments.length) return width;

@@ -1,26 +1,50 @@
-{
-  "results": [
-    {
+[
+  {
+    "result": {
       "label": "Connaissance",
-      "type": 4,
-      "value": 0.5
-    }
-  ],
-  "markers": [
-    {
-      "label": "1",
-      "value": 0.1,
-      "active": false
+      "type": 1,
+      "value": 0.531111
     },
-    {
-      "label": "2",
-      "value": 0.25,
-      "active": false
+    "markers": [
+      {
+        "label": "1",
+        "value": 0.1,
+        "active": false
+      },
+      {
+        "label": "2",
+        "value": 0.25,
+        "active": false
+      },
+      {
+        "label": "4",
+        "value": 0.8,
+        "active": true
+      }
+    ]
+  },
+  {
+    "result": {
+      "label": "Compétence",
+      "type": 2,
+      "value": 0.4715151
     },
-    {
-      "label": "4",
-      "value": 0.5,
-      "active": true
-    }
-  ]
-}
+    "markers": [
+      {
+        "label": "1",
+        "value": 0.2154545454,
+        "active": false
+      },
+      {
+        "label": "2",
+        "value": 0.25111111,
+        "active": false
+      },
+      {
+        "label": "4",
+        "value": 0.533,
+        "active": true
+      }
+    ]
+  }
+]
