@@ -10,7 +10,7 @@ export default function () {
   let data = {};
   let width = 960;
   let height = 100;
-  let graphMargins = { top: 10, right: 5, bottom: 30, left: 15 }; // Absolute margins
+  let graphMargins = { top: 20, right: 5, bottom: 30, left: 15 }; // Absolute margins
   let graphWidth = function () { return width - graphMargins.left - graphMargins.right; };
   let graphHeight = function () { return height - graphMargins.top - graphMargins.bottom; };
   let marginW = 0.1;
@@ -37,7 +37,9 @@ export default function () {
     let graphWrap = wrap
       .append('g')
       .attr('width', extentX)
-      .attr('height', extentY);
+      .attr('height', extentY)
+      .attr('transform', `translate(0,${graphMargins.top})`);
+    ;
 
     // Scales
     const scaleX = d3ScaleLinear()
@@ -59,7 +61,7 @@ export default function () {
 
     // Add the bottom axes
     const axisgraph = wrap.append('g').attr('class', 'axisgraph');
-    axisgraph.attr('transform', `translate(0,${extentY})`).call(
+    axisgraph.attr('transform', `translate(0,${extentY + graphMargins.top})`).call(
       d3AxisBottom(scaleX)
         .tickValues(ticksValues)
         .tickFormat(tickFormat)
@@ -90,26 +92,36 @@ export default function () {
       });
 
     var triangleSize = graphWidth() / 50;
-    const resultsmarker = wrap
+    var topPosition = function(index) {
+      return extentY * (index % 2) + graphMargins.top;
+    };
+
+    const resultsmarkerouter = wrap
       .selectAll('g.resultmarker')
       .data(resultsmarkervalues)
       .enter()
       .append('g')
       .attr('class', 'resultmarker')
-      .attr('transform', function (r) {return `translate(${scaleX(r)},${extentY})`;});
+      .attr('transform', function (r, index) {return `translate(${scaleX(r)},${topPosition(index)})`;})
 
     var symbolGenerator = d3Symbol().size(triangleSize).type(d3SymbolTriangle);
+
+    var  resultsmarker = resultsmarkerouter.append('g')
+      .attr('transform', function (r, index) {return `rotate(${180 * ((index+1) % 2)})`;});
 
     resultsmarker
       .append('path')
       .attr('d', function () {
         return symbolGenerator();
-      });
+      })
+      .attr('y',  triangleSize * 0.8);
+
 
     resultsmarker
       .append('text')
-      .attr('dy', function(_d,index){ return triangleSize * (1+ index)*0.7;} )
-      .text(function (d) {return `${Math.round(d* 100)} %`;});
+      .attr('dy', function (_d, index) { return (index) % 2 ? triangleSize : -triangleSize*0.5;})
+      .attr('transform', function (r, index) {return `rotate(${180 * ((index+1) % 2)})`;})
+      .text(function (d) {return `${Math.round(d * 100)} %`;});
 
   }
 
@@ -129,7 +141,7 @@ export default function () {
     );
 
     // Draw markers
-    let circleRadius = progressCVS.barHeight(maxHeight)/2;
+    let circleRadius = progressCVS.barHeight(maxHeight) / 2;
 
     let marker = wrapper.selectAll('g.marker')
       .data(currentData.markers)
@@ -137,19 +149,19 @@ export default function () {
       .append('g')
       .attr('class', function (d) {return d.active ? 'marker active' : 'marker';})
       .attr('x', function (r) { return scaleX(r.value);})
-      .attr('y', maxHeight/2);
+      .attr('y', maxHeight / 2);
 
     marker.append('circle')
       .attr('r', circleRadius)
       .attr('cx', function (r) { return scaleX(r.value);})
-      .attr('cy', maxHeight/2);
+      .attr('cy', maxHeight / 2);
 
     marker.append('text')
       .attr('x', function (r) { return scaleX(r.value);})
-      .attr('y', maxHeight/2)
+      .attr('y', maxHeight / 2)
       .text(function (d) {return d.label;})
       .attr('class', 'marker-text')
-      .attr('font-size', maxHeight/2);
+      .attr('font-size', maxHeight / 2);
   };
 
   progressCVS.createBar = function (item, classname, maxHeight, widthCallBack) {
@@ -163,7 +175,7 @@ export default function () {
       .attr('y', function () { return progressCVS.barMiddlePosition(maxHeight);});
   };
 
-  progressCVS.barHeight = function (maxHeight) { return maxHeight * (1 - marginH  * 2); };
+  progressCVS.barHeight = function (maxHeight) { return maxHeight * (1 - marginH * 2); };
   progressCVS.barMiddlePosition = function (maxHeight) { return maxHeight / 2 - progressCVS.barHeight(maxHeight) / 2; };
 
   progressCVS.width = function (_) {
