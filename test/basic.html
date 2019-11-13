@@ -17,6 +17,8 @@
     .width(960)
     .height(100);
 
+  chart.addPatternDefinition(); // Check if it is not added twice
+
   d3.json('data.json').then(function(data) {
     chart.data(data);
     var svg = d3.select('body').select('svg');

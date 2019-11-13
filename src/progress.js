@@ -1,3 +1,4 @@
+import { select as d3Select } from 'd3-selection';
 import { axisBottom as d3AxisBottom } from 'd3-axis';
 import { scaleLinear as d3ScaleLinear } from 'd3-scale';
 import { symbol as d3Symbol, symbolTriangle as d3SymbolTriangle } from 'd3-shape';
@@ -13,13 +14,17 @@ export default function () {
   let graphMargins = { top: 20, right: 5, bottom: 30, left: 15 }; // Absolute margins
   let graphWidth = function () { return width - graphMargins.left - graphMargins.right; };
   let graphHeight = function () { return height - graphMargins.top - graphMargins.bottom; };
-  let marginW = 0.1;
+  let marginW = 0.05;
   let marginH = 0.1;
 
   let ticksValues = [0, 0.25, 0.50, 0.75, 1];
 
   // For each small multiple…
   function progressCVS (svgitem) {
+
+    // Prepare for patterns
+
+    progressCVS.addPatternDefinition();
 
     // This wrapper contains the graph and the axis
     let wrap = svgitem
@@ -39,7 +44,6 @@ export default function () {
       .attr('width', extentX)
       .attr('height', extentY)
       .attr('transform', `translate(0,${graphMargins.top})`);
-    ;
 
     // Scales
     const scaleX = d3ScaleLinear()
@@ -92,7 +96,7 @@ export default function () {
       });
 
     var triangleSize = graphWidth() / 50;
-    var topPosition = function(index) {
+    var topPosition = function (index) {
       return extentY * (index % 2) + graphMargins.top;
     };
 
@@ -102,26 +106,43 @@ export default function () {
       .enter()
       .append('g')
       .attr('class', 'resultmarker')
-      .attr('transform', function (r, index) {return `translate(${scaleX(r)},${topPosition(index)})`;})
+      .attr('transform', function (r, index) {return `translate(${scaleX(r)},${topPosition(index)})`;});
 
     var symbolGenerator = d3Symbol().size(triangleSize).type(d3SymbolTriangle);
 
-    var  resultsmarker = resultsmarkerouter.append('g')
-      .attr('transform', function (r, index) {return `rotate(${180 * ((index+1) % 2)})`;});
+    var resultsmarker = resultsmarkerouter.append('g')
+      .attr('transform', function (r, index) {return `rotate(${180 * ((index + 1) % 2)})`;});
 
     resultsmarker
       .append('path')
       .attr('d', function () {
         return symbolGenerator();
       })
-      .attr('y',  triangleSize * 0.8);
+      .attr('y', triangleSize * 0.8);
 
-
-    resultsmarker
+    resultsmarker.append('g').attr('class', 'resultmarker-bg')
       .append('text')
-      .attr('dy', function (_d, index) { return (index) % 2 ? triangleSize : -triangleSize*0.5;})
-      .attr('transform', function (r, index) {return `rotate(${180 * ((index+1) % 2)})`;})
+      .attr('class', 'resultmarker-text')
+      .attr('dy', function (_d, index) { return (index) % 2 ? triangleSize : -triangleSize * 0.5;})
       .text(function (d) {return `${Math.round(d * 100)} %`;});
+
+    var markersbb = [];
+    svgitem.selectAll('text.resultmarker-text').each(function (d, i) {
+      markersbb[i] = this.getBBox(); // get bounding box of text field and store it in texts array
+    });
+
+    // Adjust rect so they are in the background
+    svgitem
+      .selectAll('g.resultmarker-bg')
+      .attr('transform', function (r, index) {return `rotate(${180 * ((index + 1) % 2)})`;})
+      .data(markersbb)
+      .append('rect')
+      .lower()
+      .attr('class', 'resultmarker-bg')
+      .attr('x', function (d) { return d.x; })
+      .attr('y', function (d) { return d.y; })
+      .attr('width', function (d) { return d.width; })
+      .attr('height', function (d) { return d.height; });
 
   }
 
@@ -200,6 +221,49 @@ export default function () {
     if (!arguments.length) return data;
     data = _;
     return this;
+  };
+
+  progressCVS.addPatternDefinition = function (_) {
+    var availablepatterns = [
+      {
+        pattername: 'crosshatch',
+        imagedef: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPSc4JyBoZWlnaHQ9JzgnPgogIDxyZWN0IHdpZHRoPSc4JyBoZWlnaHQ9JzgnIGZpbGw9JyNmZmYnLz4KICA8cGF0aCBkPSdNMCAwTDggOFpNOCAwTDAgOFonIHN0cm9rZS13aWR0aD0nMC41JyBzdHJva2U9JyNhYWEnLz4KPC9zdmc+Cg=='
+      },
+      {
+        pattername: 'diagonal-stripe-3',
+        imagedef: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxMCcgaGVpZ2h0PScxMCc+CiAgPHJlY3Qgd2lkdGg9JzEwJyBoZWlnaHQ9JzEwJyBmaWxsPSd3aGl0ZScvPgogIDxwYXRoIGQ9J00tMSwxIGwyLC0yCiAgICAgICAgICAgTTAsMTAgbDEwLC0xMAogICAgICAgICAgIE05LDExIGwyLC0yJyBzdHJva2U9J2JsYWNrJyBzdHJva2Utd2lkdGg9JzMnLz4KPC9zdmc+'
+      },
+      {
+        pattername: 'whitecarbon',
+        imagedef: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHhtbG5zOnhsaW5rPSdodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rJyB3aWR0aD0nNicgaGVpZ2h0PSc2Jz4KICA8cmVjdCB3aWR0aD0nNicgaGVpZ2h0PSc2JyBmaWxsPScjZWVlZWVlJy8+CiAgPGcgaWQ9J2MnPgogICAgPHJlY3Qgd2lkdGg9JzMnIGhlaWdodD0nMycgZmlsbD0nI2U2ZTZlNicvPgogICAgPHJlY3QgeT0nMScgd2lkdGg9JzMnIGhlaWdodD0nMicgZmlsbD0nI2Q4ZDhkOCcvPgogIDwvZz4KICA8dXNlIHhsaW5rOmhyZWY9JyNjJyB4PSczJyB5PSczJy8+Cjwvc3ZnPg=='
+      },
+      {
+        pattername: 'dots-7',
+        imagedef: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxMCcgaGVpZ2h0PScxMCc+CiAgPHJlY3Qgd2lkdGg9JzEwJyBoZWlnaHQ9JzEwJyBmaWxsPSd3aGl0ZScgLz4KICA8cmVjdCB4PScwJyB5PScwJyB3aWR0aD0nNycgaGVpZ2h0PSc3JyBmaWxsPSdibGFjaycgLz4KPC9zdmc+'
+      },
+    ];
+
+    var svgpattern = d3Select('body').select('svg#d3svgpatterndef');
+    if (svgpattern.empty()) {
+      d3Select('body')
+        .append('svg')
+        .attr('id', 'd3svgpatterndef')
+        .append('defs')
+        .selectAll('pattern')
+        .data(availablepatterns)
+        .enter()
+        .append('pattern')
+        .attr('id', function (d) {return d.pattername;})
+        .attr('patternUnits', 'userSpaceOnUse')
+        .attr('width', 10)
+        .attr('height', 10)
+        .append('image')
+        .attr('xlink:href', function (d) {return d.imagedef;})
+        .attr('x', 0)
+        .attr('y', 0)
+        .attr('width', 10)
+        .attr('height', 10);
+    }
   };
 
   return progressCVS;

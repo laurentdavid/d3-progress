@@ -3,7 +3,7 @@
     "result": {
       "label": "Connaissance",
       "type": 1,
-      "value": 0.531111
+      "value": 0.631111
     },
     "markers": [
       {
@@ -27,7 +27,7 @@
     "result": {
       "label": "Compétence",
       "type": 2,
-      "value": 0.4715151
+      "value": 0.50
     },
     "markers": [
       {
