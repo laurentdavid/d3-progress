@@ -25,6 +25,7 @@ export default function () {
     // Prepare for patterns
 
     progressCVS.addPatternDefinition();
+    progressCVS.addFilterDefinition(2,2,2, 'linear', 0.5);
 
     // This wrapper contains the graph and the axis
     let wrap = svgitem
@@ -95,12 +96,12 @@ export default function () {
         return r.result.value;
       });
 
-    var triangleSize = graphWidth() / 50;
+    var triangleSize = Math.sqrt(graphWidth() / 25);
     var topPosition = function (index) {
-      return extentY * (index % 2) + graphMargins.top;
+      return (index % 2)? graphMargins.top + extentY + triangleSize: graphMargins.top - triangleSize;
     };
 
-    const resultsmarkerouter = wrap
+    const resultsmarker = wrap
       .selectAll('g.resultmarker')
       .data(resultsmarkervalues)
       .enter()
@@ -108,22 +109,26 @@ export default function () {
       .attr('class', 'resultmarker')
       .attr('transform', function (r, index) {return `translate(${scaleX(r)},${topPosition(index)})`;});
 
-    var symbolGenerator = d3Symbol().size(triangleSize).type(d3SymbolTriangle);
+    var symbolGenerator = d3Symbol().size(triangleSize*triangleSize).type(d3SymbolTriangle);
 
-    var resultsmarker = resultsmarkerouter.append('g')
-      .attr('transform', function (r, index) {return `rotate(${180 * ((index + 1) % 2)})`;});
+    //var resultsmarker = resultsmarkerouter.append('g');
+
 
     resultsmarker
       .append('path')
+      .attr('class','value-arrow')
       .attr('d', function () {
         return symbolGenerator();
       })
-      .attr('y', triangleSize * 0.8);
+      .attr('transform', function (r, index) {return `rotate(${180 * ((index + 1) % 2)}),translate(0,${
+          ((index) % 2 ? -triangleSize : -triangleSize*0.6)})`;});
+
 
     resultsmarker.append('g').attr('class', 'resultmarker-bg')
+      .attr('transform', function (_d, index) { return  `translate(0,${(index) % 2 ? triangleSize : 0})`;})
       .append('text')
       .attr('class', 'resultmarker-text')
-      .attr('dy', function (_d, index) { return (index) % 2 ? triangleSize : -triangleSize * 0.5;})
+      .attr('font-size', tickSize * 1.2)
       .text(function (d) {return `${Math.round(d * 100)} %`;});
 
     var markersbb = [];
@@ -132,26 +137,34 @@ export default function () {
     });
 
     // Adjust rect so they are in the background
+    // Margin of few px
+
     svgitem
       .selectAll('g.resultmarker-bg')
-      .attr('transform', function (r, index) {return `rotate(${180 * ((index + 1) % 2)})`;})
       .data(markersbb)
       .append('rect')
       .lower()
       .attr('class', 'resultmarker-bg')
-      .attr('x', function (d) { return d.x; })
-      .attr('y', function (d) { return d.y; })
-      .attr('width', function (d) { return d.width; })
-      .attr('height', function (d) { return d.height; });
+      .attr('x', function (d) { return d.x-d.width*marginW/2; })
+      .attr('y', function (d ) { return d.y-d.height*marginH/2; })
+      .attr('width', function (d) { return d.width*(1+marginW/2); })
+      .attr('height', function (d) { return d.height*(1+marginH/2); });
 
   }
 
   progressCVS.barCVS = function (currentData, wrapper, maxHeight, scaleX, extentX) {
     progressCVS.createBar(
       wrapper,
-      'bar-bg',
+      'bar-gray-bg',
       maxHeight,
       function () {return extentX;}
+    );
+
+    progressCVS.createBar(
+      wrapper,
+      'bar-bg',
+      maxHeight,
+      function () {return scaleX(currentData.result.value);}
     );
 
     progressCVS.createBar(
@@ -162,7 +175,7 @@ export default function () {
     );
 
     // Draw markers
-    let circleRadius = progressCVS.barHeight(maxHeight) / 2;
+    let circleRadius = progressCVS.barHeight(maxHeight) / 2.2;
 
     let marker = wrapper.selectAll('g.marker')
       .data(currentData.markers)
@@ -190,8 +203,8 @@ export default function () {
       .attr('class', classname)
       .attr('width', widthCallBack)
       .attr('height', function () {return progressCVS.barHeight(maxHeight);})
-      .attr('rx', maxHeight * marginH)
-      .attr('ry', maxHeight * marginH)
+      .attr('rx', maxHeight * marginH * 2)
+      .attr('ry', maxHeight * marginH * 2)
       .attr('x', 0)
       .attr('y', function () { return progressCVS.barMiddlePosition(maxHeight);});
   };
@@ -224,6 +237,7 @@ export default function () {
   };
 
   progressCVS.addPatternDefinition = function (_) {
+    // See https://iros.github.io/patternfills/sample_d3.html
     var availablepatterns = [
       {
         pattername: 'crosshatch',
@@ -243,11 +257,11 @@ export default function () {
       },
     ];
 
-    var svgpattern = d3Select('body').select('svg#d3svgpatterndef');
+    var svgpattern = d3Select('body').select('svg#d3progresspatternsdef');
     if (svgpattern.empty()) {
       d3Select('body')
         .append('svg')
-        .attr('id', 'd3svgpatterndef')
+        .attr('id', 'd3progresspatternsdef')
         .append('defs')
         .selectAll('pattern')
         .data(availablepatterns)
@@ -263,6 +277,33 @@ export default function () {
         .attr('y', 0)
         .attr('width', 10)
         .attr('height', 10);
+    }
+  };
+
+  progressCVS.addFilterDefinition = function (dx, dy, stdDeviation, type, slope) {
+    var svgpattern = d3Select('body').select('svg#d3progressfiltersdef');
+    if (svgpattern.empty()) {
+      var defs = d3Select('body')
+        .append('svg')
+        .attr('id', 'd3progressfiltersdef')
+        .append('defs');
+      var filter = defs.append('filter')
+        .attr('id', 'd3std-dropshadow');
+      filter.append('feGaussianBlur')
+        .attr('in', 'SourceAlpha')
+        .attr('stdDeviation', parseInt(stdDeviation));
+
+      filter.append('feOffset')
+        .attr('dx', dx)
+        .attr('dy', dy);
+      var feComponentTransfer = filter.append('feComponentTransfer');
+      feComponentTransfer.append('feFuncA')
+        .attr('type', type)
+        .attr('slope', parseFloat(slope));
+
+      var feMerge = filter.append('feMerge');
+      feMerge.append('feMergeNode');
+      feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
     }
   };
 
