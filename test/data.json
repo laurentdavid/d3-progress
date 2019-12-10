@@ -21,6 +21,9 @@
         "value": 0.8,
         "active": true
       }
+    ],
+    "stopbars": [
+      0.1
     ]
   },
   {
@@ -44,7 +47,15 @@
         "label": "4",
         "value": 0.533,
         "active": true
+      },
+      {
+        "label": "5",
+        "value": 0.8,
+        "active": true
       }
+    ],
+    "stopbars": [
+      0.6
     ]
   }
 ]
