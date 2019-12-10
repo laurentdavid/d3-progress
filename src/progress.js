@@ -212,12 +212,12 @@ export default function () {
       })
       .attr('transform', function (r) {
         return `rotate(${180 * r.position}),translate(0,${
-          (r.position ? -triangleSize : -triangleSize * 0.6)})`;
+          (r.position ? -triangleSize : - triangleSize*0.5)})`;
       });
 
     resultsmarker.append('g')
       .attr('class', labelmarkerclass + '-container')
-      .attr('transform', function (r) { return `translate(0,${r.position ? 0 : triangleSize * 1.6})`;})
+      .attr('transform', function (r) { return `translate(0,${r.position ? 0 : triangleSize * 2})`;})
       .append('text')
       .attr('class', labelmarkerclass + '-text')
       .attr('font-size', tickSize * 1.2)
@@ -230,7 +230,6 @@ export default function () {
       markersbb[i] = this.getBBox(); // get bounding box of text field and store it in texts array
     });
 
-
     if (shape == 'ellipse') {
       wrap
         .selectAll('g.' + labelmarkerclass + '-container')
@@ -240,8 +239,8 @@ export default function () {
         .attr('class', labelmarkerclass + '-bg')
         .attr('cx', function (d) { return d.x + d.width / 2; })
         .attr('cy', function (d) { return d.y + d.height / 2; })
-        .attr('rx', function (d) { return d.width * (1 + marginW * 4 ) / 2; })
-        .attr('ry', function (d) { return d.height * (1 + marginH * 4 )  / 2; });
+        .attr('rx', function (d) { return d.width * (1 + marginW * 4) / 2; })
+        .attr('ry', function (d) { return d.height * (1 + marginH * 4) / 2; });
       ;
     } else {
       wrap
