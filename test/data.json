@@ -30,7 +30,7 @@
     "result": {
       "label": "Compétence",
       "type": 2,
-      "value": 0.50
+      "value": 0.5
     },
     "markers": [
       {
@@ -55,7 +55,7 @@
       }
     ],
     "stopbars": [
-      0.6
+      0
     ]
   }
 ]

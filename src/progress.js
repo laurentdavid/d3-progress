@@ -110,7 +110,7 @@ export default function () {
         return labelData;
       });
 
-    progressCVS.displayLabels(resultsmarkervalues, 'labelmarker', tickSize, wrap, extentY, scaleX, 'rect');
+    progressCVS.displayLabels(resultsmarkervalues, 'labelmarker', tickSize, wrap, extentY, scaleX);
 
     // Add stop bar labels
     let labelbarvalues =
@@ -125,7 +125,7 @@ export default function () {
         }
         return acc;
       }, []);
-    progressCVS.displayLabels(labelbarvalues, 'labelbar', tickSize, wrap, extentY, scaleX, 'ellipse');
+    progressCVS.displayLabels(labelbarvalues, 'stoplabelbar', tickSize, wrap, extentY, scaleX);
   }
 
   progressCVS.barCVS = function (currentData, wrapper, maxHeight, scaleX, extentX) {
@@ -151,7 +151,7 @@ export default function () {
     );
 
     // Draw markers
-    let circleRadius = progressCVS.barHeight(maxHeight) / 2.2;
+    let circleRadius = progressCVS.barHeight(maxHeight) / 2 - maxHeight * marginH;
 
     let marker = wrapper.selectAll('g.marker')
       .data(currentData.markers)
@@ -168,7 +168,8 @@ export default function () {
 
     marker.append('text')
       .attr('x', function (r) { return scaleX(r.value);})
-      .attr('y', maxHeight / 2)
+      .attr('y', maxHeight / 2 + maxHeight * marginH / 2)
+      .attr('alignment-baseline', 'middle')
       .text(function (d) {return d.label;})
       .attr('class', 'marker-text')
       .attr('font-size', maxHeight / 2);
@@ -186,7 +187,7 @@ export default function () {
   };
 
   // labelmarker: a set of value + position (0 = top, 1 = bottom)
-  progressCVS.displayLabels = function (resultsmarkervalues, labelmarkerclass, tickSize, wrap, extentY, scaleX, shape) {
+  progressCVS.displayLabels = function (resultsmarkervalues, labelmarkerclass, tickSize, wrap, extentY, scaleX) {
 
     var triangleSize = Math.sqrt(graphWidth() / 25);
     var topPosition = function (index) {
@@ -198,22 +199,7 @@ export default function () {
       .data(resultsmarkervalues)
       .enter()
       .append('g')
-      .attr('class', labelmarkerclass)
-      .attr('transform', function (r) {return `translate(${scaleX(r.value)},${topPosition(r.position)})`;});
-
-    var symbolGenerator = d3Symbol().size(triangleSize * triangleSize).type(d3SymbolTriangle);
-
-    //var resultsmarker = resultsmarkerouter.append('g');
-    resultsmarker
-      .append('path')
-      .attr('class', 'value-arrow')
-      .attr('d', function () {
-        return symbolGenerator();
-      })
-      .attr('transform', function (r) {
-        return `rotate(${180 * r.position}),translate(0,${
-          (r.position ? -triangleSize : - triangleSize*0.5)})`;
-      });
+      .attr('class', labelmarkerclass);
 
     resultsmarker.append('g')
       .attr('class', labelmarkerclass + '-container')
@@ -227,33 +213,48 @@ export default function () {
     // Margin of few px
     var markersbb = [];
     wrap.selectAll('text.' + labelmarkerclass + '-text').each(function (d, i) {
-      markersbb[i] = this.getBBox(); // get bounding box of text field and store it in texts array
+      markersbb[i] = this.getBBox();// get bounding box of text field and store it in texts array
+      markersbb[i].position = d.position;
     });
 
-    if (shape == 'ellipse') {
-      wrap
-        .selectAll('g.' + labelmarkerclass + '-container')
-        .data(markersbb)
-        .append('ellipse')
-        .lower()
-        .attr('class', labelmarkerclass + '-bg')
-        .attr('cx', function (d) { return d.x + d.width / 2; })
-        .attr('cy', function (d) { return d.y + d.height / 2; })
-        .attr('rx', function (d) { return d.width * (1 + marginW * 4) / 2; })
-        .attr('ry', function (d) { return d.height * (1 + marginH * 4) / 2; });
-      ;
-    } else {
-      wrap
-        .selectAll('g.' + labelmarkerclass + '-container')
-        .data(markersbb)
-        .append('rect')
-        .lower()
-        .attr('class', labelmarkerclass + '-bg')
-        .attr('x', function (d) { return d.x - d.width * marginW / 2; })
-        .attr('y', function (d) { return d.y - d.height * marginH / 2; })
-        .attr('width', function (d) { return d.width * (1 + marginW / 2); })
-        .attr('height', function (d) { return d.height * (1 + marginH / 2); });
-    }
+    wrap
+      .selectAll('g.' + labelmarkerclass + '-container')
+      .data(markersbb)
+      .append('path')
+      .lower()
+      .attr('d', function (bbox) {
+        var startX = bbox.x - bbox.width * marginW ;
+        var startY = bbox.y - bbox.height * marginH ;
+        var endX = (bbox.x + bbox.width) - bbox.width * marginW / 2;
+        var endY = (bbox.y + bbox.height) - bbox.height * marginH / 2;
+        var path = `M ${startX} ${startY} `;
+        if (!bbox.position) { // Top triangle
+          path += `L ${startX + (endX - startX) / 3} ${startY} `;
+          path += `L ${startX + (endX - startX) / 2} ${(startY - triangleSize)} `;
+          path += `L ${startX + 2 * (endX - startX) / 3} ${startY} `;
+
+        }
+        path += `L ${endX} ${startY} `;
+        path += `L ${endX} ${endY} `;
+        if (bbox.position) { // Bottom triangle
+          path += `L ${startX + 2 * (endX - startX) / 3} ${endY} `;
+          path += `L ${startX + (endX - startX) / 2} ${endY + triangleSize} `;
+          path += `L ${startX + (endX - startX) / 3} ${endY} `;
+        }
+        path += `L ${startX} ${endY} `;
+        path += `L ${startX} ${startY} `;
+        return path;
+
+      })
+      .attr('class', labelmarkerclass + '-bg');
+
+      wrap.selectAll('g.' + labelmarkerclass)
+        .attr('transform', function (r, index)
+        {
+          var translateX = scaleX(r.value) + markersbb[index].width * marginW * 2 ;
+          var translateY = topPosition(r.position);
+          return `translate(${translateX},${translateY})`;
+        });
   };
 
   progressCVS.barHeight = function (maxHeight) { return maxHeight * (1 - marginH * 2); };
