@@ -207,6 +207,7 @@ export default function () {
       .append('text')
       .attr('class', labelmarkerclass + '-text')
       .attr('font-size', tickSize * 1.2)
+      .attr('text-anchor', 'middle')
       .text(function (r) {return `${Math.round(r.value * 100)} %`;});
 
     // Adjust rect so they are in the background
