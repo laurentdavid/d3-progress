@@ -17,7 +17,7 @@ export default function () {
   let marginW = 0.05;
   let marginH = 0.1;
 
-  let ticksValues = [0, 0.25, 0.50, 0.75, 1];
+  let ticksValues = [0, 0.50, 1];
 
   // For each small multiple…
   function progressCVS (svgitem) {

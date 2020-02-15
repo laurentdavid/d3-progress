@@ -21,7 +21,7 @@
 .progress-cvs .marker text {
     text-anchor: middle;
     dominant-baseline: middle;
-    font-weight: bolder;
+    font-weight: normal;
 }
 
 /*   Competency Type : Generic  */
