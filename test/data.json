@@ -22,7 +22,7 @@
         "active": true
       }
     ],
-    "stopbars": [
+    "starmarkers": [
       0.1
     ]
   },
@@ -54,7 +54,7 @@
         "active": true
       }
     ],
-    "stopbars": [
+    "starmarkers": [
       0
     ]
   }
